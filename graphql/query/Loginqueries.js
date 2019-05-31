@@ -1,7 +1,7 @@
 var LoginType = require("../types/Usertypes");
 const {GraphQLObjectType,GraphQLString,GraphQLInt} = require("graphql");;
 var usermodel = require('./../../model/user');
-
+var md5 = require("md5");
 
 
 const RootQuery = new GraphQLObjectType({
@@ -10,13 +10,30 @@ const RootQuery = new GraphQLObjectType({
        user:{
         type:LoginType,
         args:{
-            id:{type:GraphQLString}
+            email:{type:GraphQLString},
+            password:{type:GraphQLString},
+            
         },
        async resolve(parentValue,args){
-        console.log(args)
+        try {
+        var user = await usermodel.findOne({Email:args.email});
+            if(!user) throw Error(`Account not found ${args.email}`);
+            
+            if(user.verify==0){
+                if(user.Password == md5(args.password)){
+                    return (user)
+                }else{
+                    return Error("password Not Match");
+                }    
+            }else{
+                return Error("Account Not Verify");
+            }
+        } catch (error) {
+            throw Error(error);
         }
-       }
-   } 
+    }
+}
+}
 });
 
 
